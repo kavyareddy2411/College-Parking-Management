@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f4f5f0">
+    <title>Admin dashboard | Parkside</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body data-page="admin">
+    <div class="app-shell">
+        <aside class="sidebar">
+            <a class="brand" href="index.html"><span class="brand-mark">P</span><span><strong>Parkside</strong><small>CAMPUS MOBILITY</small></span></a>
+            <nav class="side-nav" aria-label="Main navigation">
+                <span class="nav-caption">WORKSPACE</span>
+                <a class="nav-link" data-nav="dashboard" href="index.html"><span class="nav-symbol">⌂</span>Overview</a>
+                <a class="nav-link" data-nav="parking" href="parking.html"><span class="nav-symbol">▦</span>Find parking</a>
+                <a class="nav-link" data-nav="booking" href="booking.html"><span class="nav-symbol">＋</span>Book a space</a>
+                <a class="nav-link" data-nav="my-bookings" href="my-bookings.html"><span class="nav-symbol">▤</span>My bookings</a>
+                <span class="nav-caption nav-caption-lower">MANAGEMENT</span>
+                <a class="nav-link" data-nav="admin" href="admin.html"><span class="nav-symbol">◫</span>Admin dashboard</a>
+            </nav>
+            <div class="sidebar-bottom"><div class="sidebar-profile"><span class="profile-avatar" data-profile-initial>G</span><span class="profile-copy"><strong data-profile-name>Guest</strong><small data-profile-role>Campus visitor</small></span></div><button class="text-button sign-out" data-logout type="button">Sign out</button></div>
+        </aside>
+        <main class="main-panel">
+            <header class="topbar"><div class="breadcrumb">Management <span>/</span> Admin dashboard</div><div class="topbar-actions"><span class="live-pill"><i></i> Live availability</span><a class="topbar-avatar" data-profile-initial href="login.html" aria-label="Sign in">G</a></div></header>
+            <div class="page-content">
+                <div class="page-heading heading-row"><div><p class="eyebrow">CAMPUS OPERATIONS</p><h1>Admin dashboard</h1><p class="muted">A live view of your campus parking activity.</p></div><span class="admin-tag">ADMIN VIEW</span></div>
+                <section class="stats-grid stats-grid-admin"><article class="stat-card"><span class="stat-label">Total spaces</span><strong class="stat-value" id="admin-total">—</strong><span class="stat-foot">Across all campus lots</span><span class="stat-mark stat-mark-green">▦</span></article><article class="stat-card"><span class="stat-label">Available now</span><strong class="stat-value" id="admin-available">—</strong><span class="stat-foot">Ready to be booked</span><span class="stat-mark stat-mark-blue">✓</span></article><article class="stat-card"><span class="stat-label">Active bookings</span><strong class="stat-value" id="admin-bookings">—</strong><span class="stat-foot">Upcoming reservations</span><span class="stat-mark stat-mark-orange">↗</span></article><article class="stat-card"><span class="stat-label">Registered users</span><strong class="stat-value" id="admin-users">—</strong><span class="stat-foot">Campus members</span><span class="stat-mark stat-mark-yellow">◎</span></article></section>
+                <section class="panel admin-table-panel"><div class="section-heading"><div><h2>Recent bookings</h2><p class="muted">Review and manage campus reservations.</p></div><span class="admin-tag">ALL USERS</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Member</th><th>Space</th><th>Arrival</th><th>Vehicle</th><th>Status</th><th></th></tr></thead><tbody id="admin-booking-rows"></tbody></table></div></section>
+                <div class="page-note" id="page-note" role="status"></div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
