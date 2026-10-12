@@ -8,11 +8,27 @@ const zones = [
 async function api(path, options = {}) {
     const headers = { ...options.headers };
     if (options.body) headers["Content-Type"] = "application/json";
-    const response = await fetch(path, { credentials: "same-origin", ...options, headers });
+    let response;
+    try {
+        response = await fetch(path, { credentials: "same-origin", ...options, headers });
+    } catch {
+        throw new Error("Cannot connect to the parking server. Make sure the Spring Boot app is running.");
+    }
     if (response.status === 204) return null;
     const result = await response.json().catch(() => null);
     if (!response.ok) {
-        const error = new Error(result?.detail || result?.message || `Request failed (${response.status})`);
+        const messages = {
+            400: "Please check the information you entered and try again.",
+            401: "Email or password is incorrect. Please try again.",
+            403: "You do not have permission to do that.",
+            404: "The requested item could not be found.",
+            409: "That item has changed. Refresh the page and try again."
+        };
+        const endpointMessages = {
+            "/api/auth/register": { 409: "An account with that email already exists. Sign in instead." },
+            "/api/bookings": { 409: "That parking space is no longer available. Choose another space." }
+        };
+        const error = new Error(result?.detail || result?.message || endpointMessages[path]?.[response.status] || messages[response.status] || "The server could not complete your request. Try again shortly.");
         error.status = response.status;
         throw error;
     }
@@ -57,7 +73,7 @@ function initialiseNavigation() {
     const page = document.body.dataset.page;
     document.querySelectorAll("[data-nav]").forEach((link) => { if (link.dataset.nav === page) link.classList.add("is-active"); });
     document.querySelectorAll("[data-logout]").forEach((button) => button.addEventListener("click", async () => {
-        try { await api("/api/auth/logout", { method: "POST" }); } finally { window.location.href = "index.html"; }
+        try { await api("/api/auth/logout", { method: "POST" }); } finally { window.location.href = "/"; }
     }));
 }
 function initialiseProfile(user) {
@@ -65,7 +81,7 @@ function initialiseProfile(user) {
     document.querySelectorAll("[data-profile-role]").forEach((item) => { item.textContent = user ? (user.role === "admin" ? "Campus administrator" : user.role === "staff" ? "College staff" : "Student account") : "Campus visitor"; });
     document.querySelectorAll("[data-profile-initial]").forEach((item) => {
         item.textContent = user ? user.name.trim().charAt(0).toUpperCase() : "G";
-        if (item.tagName === "A") item.href = user ? (user.role === "admin" ? "admin.html" : "my-bookings.html") : "login.html";
+        if (item.tagName === "A") item.href = user ? (user.role === "admin" ? "/admin" : "/my-bookings") : "/login";
     });
     const accountLink = document.getElementById("account-link");
     if (accountLink && user) {
@@ -98,8 +114,8 @@ async function initialiseDashboard(user) {
     const next = userBookings.sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`))[0];
     const content = document.getElementById("next-booking-content");
     content.innerHTML = next
-        ? `<div class="next-date"><strong>${escapeHTML(formatDate(next.date, { month: "short", day: "numeric" }))}</strong><span>${escapeHTML(next.time)}</span></div><div class="next-details"><span class="eyebrow">${escapeHTML(next.id)}</span><h3>${escapeHTML(next.slotId)} <span class="status-pill status-active">Confirmed</span></h3><p>${escapeHTML(next.zone)} lot · ${escapeHTML(next.duration)} hour${next.duration === 1 ? "" : "s"}</p></div><a class="text-link" href="my-bookings.html">Booking details <span>→</span></a>`
-        : `<div class="empty-state compact-empty"><span class="empty-symbol">＋</span><strong>No upcoming bookings</strong><p>Save yourself the search and reserve a space.</p><a class="text-link" href="booking.html">Make a booking <span>→</span></a></div>`;
+        ? `<div class="next-date"><strong>${escapeHTML(formatDate(next.date, { month: "short", day: "numeric" }))}</strong><span>${escapeHTML(next.time)}</span></div><div class="next-details"><span class="eyebrow">${escapeHTML(next.id)}</span><h3>${escapeHTML(next.slotId)} <span class="status-pill status-active">Confirmed</span></h3><p>${escapeHTML(next.zone)} lot · ${escapeHTML(next.duration)} hour${next.duration === 1 ? "" : "s"}</p></div><a class="text-link" href="/my-bookings">Booking details <span>→</span></a>`
+        : `<div class="empty-state compact-empty"><span class="empty-symbol">＋</span><strong>No upcoming bookings</strong><p>Save yourself the search and reserve a space.</p><a class="text-link" href="/booking">Make a booking <span>→</span></a></div>`;
 }
 
 async function initialiseParking() {
@@ -115,7 +131,7 @@ async function initialiseParking() {
             return `<section class="lot-zone"><div class="lot-zone-heading"><div><span class="zone-marker">${zone.prefix}</span><span><strong>${zone.name} lot</strong><small>${zone.location}</small></span></div><span class="lot-open-count">${open} open</span></div><div class="slot-grid">${tiles}</div></section>`;
         }).join("");
         map.querySelectorAll("[data-slot-id]").forEach((button) => button.addEventListener("click", () => {
-            window.location.href = `booking.html?slot=${encodeURIComponent(button.dataset.slotId)}`;
+            window.location.href = `/booking?slot=${encodeURIComponent(button.dataset.slotId)}`;
         }));
     };
     filter.addEventListener("change", render);
@@ -123,7 +139,7 @@ async function initialiseParking() {
 }
 
 async function initialiseBookingForm(user) {
-    if (!user) { window.location.href = "login.html?next=booking.html"; return; }
+    if (!user) { window.location.href = "/login?next=%2Fbooking"; return; }
     const form = document.getElementById("booking-form");
     const dateField = document.getElementById("booking-date");
     const now = new Date();
@@ -148,7 +164,7 @@ async function initialiseBookingForm(user) {
                 slotId: values.get("slotId"), date: values.get("date"), time: values.get("time"),
                 duration: Number(values.get("duration")), plate: String(values.get("plate")).trim().toUpperCase()
             }) });
-            window.location.href = "my-bookings.html?created=1";
+            window.location.href = "/my-bookings?created=1";
         } catch (error) {
             setMessage(message, error.message);
             if (error.status === 409) await renderSlots();
@@ -157,7 +173,7 @@ async function initialiseBookingForm(user) {
 }
 
 async function initialiseMyBookings(user) {
-    if (!user) { window.location.href = "login.html?next=my-bookings.html"; return; }
+    if (!user) { window.location.href = "/login?next=%2Fmy-bookings"; return; }
     let filter = "upcoming";
     const list = document.getElementById("my-bookings-list");
     let bookings = await getMyBookings();
@@ -166,7 +182,7 @@ async function initialiseMyBookings(user) {
         document.getElementById("upcoming-count").textContent = upcoming.length;
         const shown = filter === "upcoming" ? upcoming : bookings.filter((booking) => booking.status !== "active");
         if (!shown.length) {
-            list.innerHTML = `<div class="empty-state"><span class="empty-symbol">▤</span><h3>${filter === "upcoming" ? "No upcoming bookings" : "Nothing to see here yet"}</h3><p>${filter === "upcoming" ? "Find an open space and reserve it in a few quick steps." : "Cancelled bookings will show here."}</p><a class="button button-primary" href="${filter === "upcoming" ? "parking.html" : "booking.html"}">${filter === "upcoming" ? "Find a space" : "Book a space"} <span>→</span></a></div>`;
+            list.innerHTML = `<div class="empty-state"><span class="empty-symbol">▤</span><h3>${filter === "upcoming" ? "No upcoming bookings" : "Nothing to see here yet"}</h3><p>${filter === "upcoming" ? "Find an open space and reserve it in a few quick steps." : "Cancelled bookings will show here."}</p><a class="button button-primary" href="${filter === "upcoming" ? "/parking" : "/booking"}">${filter === "upcoming" ? "Find a space" : "Book a space"} <span>→</span></a></div>`;
             return;
         }
         list.innerHTML = shown.map((booking) => {
@@ -194,7 +210,7 @@ async function initialiseMyBookings(user) {
 }
 
 async function initialiseAdmin(user) {
-    if (!user || user.role !== "admin") { window.location.href = "login.html?next=admin.html"; return; }
+    if (!user || user.role !== "admin") { window.location.href = "/login?next=%2Fadmin"; return; }
     const render = async () => {
         const [summary, bookings] = await Promise.all([api("/api/admin/summary"), api("/api/admin/bookings")]);
         document.getElementById("admin-total").textContent = summary.totalSpaces;
@@ -226,8 +242,8 @@ function initialiseLogin() {
         try {
             const user = await api("/api/auth/login", { method: "POST", body: JSON.stringify({ email: values.get("email"), password: values.get("password") }) });
             const requested = new URLSearchParams(window.location.search).get("next");
-            const allowed = ["index.html", "parking.html", "booking.html", "my-bookings.html", "admin.html"];
-            window.location.href = allowed.includes(requested) ? requested : user.role === "admin" ? "admin.html" : "index.html";
+            const allowed = ["/", "/parking", "/booking", "/my-bookings", "/admin"];
+            window.location.href = allowed.includes(requested) ? requested : user.role === "admin" ? "/admin" : "/";
         } catch (error) { setMessage(document.getElementById("form-message"), error.message); }
     });
 }
@@ -241,14 +257,13 @@ function initialiseRegistration() {
                 name: values.get("name"), email: values.get("email"), password: values.get("password"),
                 role: values.get("role"), plate: values.get("plate")
             }) });
-            window.location.href = "index.html";
+            window.location.href = "/";
         } catch (error) { setMessage(message, error.message); }
     });
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
+export async function initialisePage(page) {
     initialiseNavigation();
-    const page = document.body.dataset.page;
     if (page === "login") { initialiseLogin(); return; }
     if (page === "register") { initialiseRegistration(); return; }
     try {
@@ -260,4 +275,4 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (page === "my-bookings") await initialiseMyBookings(user);
         if (page === "admin") await initialiseAdmin(user);
     } catch (error) { showPageError(error.message || "Could not connect to the parking server. Open this page from the running application."); }
-});
+}

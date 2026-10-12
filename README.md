@@ -5,14 +5,25 @@
 The frontend uses the Spring Boot API, so open it through the running server rather than opening `frontend/index.html` directly.
 
 1. Start MySQL and create a database named `parkingdb`.
-2. Check `backend/src/main/resources/application.properties` and set `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` in your environment if your local MySQL settings differ from the defaults.
-3. From the project root, start the backend:
+2. Set `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` in your environment if your local MySQL settings differ from the defaults in `backend/src/main/resources/application.properties`. Keep real database credentials and deployment passwords out of tracked files.
+3. Build the React frontend (Node.js and npm are required):
+
+	```powershell
+	cd frontend
+	npm install
+	npm run build
+	cd ..
+	```
+
+4. From the project root, start the backend:
 
 	```powershell
 	mvn -f backend/pom.xml spring-boot:run
 	```
 
-4. Open [http://localhost:8080](http://localhost:8080). Spring Boot serves both the frontend pages and the API.
+5. Open [http://localhost:8081](http://localhost:8081). Spring Boot serves the built React app and API on port `8081` by default. To use a different port, set `SERVER_PORT` in your environment before starting the backend.
+
+For frontend development, run `npm run dev` from `frontend`; the Vite server proxies API requests to the Spring Boot server on port `8081`.
 
 The app creates 36 example parking spaces and the two demo accounts on its first start. Bookings, users, and slot status are stored in MySQL.
 

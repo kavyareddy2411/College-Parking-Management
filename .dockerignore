@@ -3,4 +3,5 @@
 .env
 **/target
 **/node_modules
+/frontend-build
 .vscode
