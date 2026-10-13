@@ -19,6 +19,7 @@ FROM eclipse-temurin:21-jre
 WORKDIR /app
 RUN useradd --system --create-home --uid 10001 appuser
 COPY --from=build /workspace/backend/target/parking-0.0.1-SNAPSHOT.jar ./app.jar
+ENV SERVER_PORT=8080
 USER appuser
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

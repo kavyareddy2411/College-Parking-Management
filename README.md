@@ -2,7 +2,7 @@
 
 ## Run locally
 
-The frontend uses the Spring Boot API, so open it through the running server rather than opening `frontend/index.html` directly.
+The React frontend uses the Spring Boot API, so open it through the running server rather than opening source files directly.
 
 1. Start MySQL and create a database named `parkingdb`.
 2. Set `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` in your environment if your local MySQL settings differ from the defaults in `backend/src/main/resources/application.properties`. Keep real database credentials and deployment passwords out of tracked files.
@@ -42,7 +42,7 @@ Demo sign-ins (change these before any public deployment):
 	```
 
 3. Edit `.env` and replace the example MySQL and demo-account passwords with strong values.
-4. Build and start the web app and MySQL database:
+4. Build and start the web app and MySQL database with the root `Dockerfile`:
 
 	```powershell
 	docker compose up --build -d
@@ -51,3 +51,5 @@ Demo sign-ins (change these before any public deployment):
 5. Open `http://localhost:<APP_PORT>` (the example uses port `8080`). If that port is busy, change `APP_PORT` in `.env`, for example to `8082`. To view startup logs, run `docker compose logs -f app`. Stop the containers with `docker compose down`; the database remains in its named volume. To also delete the database contents, run `docker compose down -v`.
 
 The root `Dockerfile` packages the Spring Boot app and frontend files in one image. Docker Compose runs MySQL alongside it and keeps database files in a named volume. Keep `.env` private. This is a student project and should receive a production security review before public deployment.
+
+To build the app image without Compose, run `docker build -t college-parking-management .` from the project root. The container listens on port `8080`; provide the database connection and credentials with environment variables when running it. For a complete deployment including MySQL, use Docker Compose as shown above.
